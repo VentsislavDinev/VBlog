@@ -1,0 +1,23 @@
+﻿@model VBlog.Data.ViewModels.HomePageViewModel
+
+<div class="technology-1">
+    <div class="container">
+        <div class="col-md-9 technology-left">
+            <div class="business">
+                <div class=" blog-grid2">
+                    <img src="/files/uploads/@Model.GetSingleBlogPost.Avatar" class="img-responsive" alt="">
+                    <div class="blog-text">
+                        <h5>@Model.GetSingleBlogPost.Title</h5>
+
+                        @Html.Raw(Model.GetSingleBlogPost.Description)
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- technology-right -->
+        @Html.Action("RightSiteBar")
+        <div class="clearfix"></div>
+        <!-- technology-right -->
+    </div>
+</div>

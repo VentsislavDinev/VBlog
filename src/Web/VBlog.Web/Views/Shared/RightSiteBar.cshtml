@@ -1,0 +1,29 @@
+﻿@model VBlog.Data.ViewModels.HomePageViewModel
+
+<div class="col-md-3 technology-right">
+    <div class="blo-top">
+        <div class="tech-btm">
+            <img src="/images/banner1.jpg" class="img-responsive" alt="" />
+        </div>
+    </div>
+   
+    <div class="blo-top1">
+        <div class="tech-btm">
+            <h4>Top stories of the week </h4>
+            @foreach (var item in Model.GetLastBlogPost)
+            {
+                <div class="blog-grids">
+                    <div class="blog-grid-left">
+                        <a href="/blogs/getsingle/@item.Title"><img src="/files/uploads/@item.Avatar" class="img-responsive" alt="" /></a>
+                    </div>
+                    <div class="blog-grid-right">
+                        <h5><a href="/blogs/getsingle/@item.Title">@item.Title</a> </h5>
+                    </div>
+                    <div class="clearfix"> </div>
+                </div>
+            }
+
+        </div>
+    </div>
+
+</div>

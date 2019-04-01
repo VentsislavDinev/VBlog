@@ -1,0 +1,86 @@
+﻿@model VBlog.Data.ViewModels.HomePageViewModel
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business_Blog a Blogging Category Flat Bootstrap Responsive Website Template | Home :: w3layouts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="keywords" content="Business_Blog Responsive web template, Bootstrap Web Templates, Flat Web Templates, Android Compatible web template,
+Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, SonyErricsson, Motorola web design" />
+    <script type="applijewelleryion/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
+    
+    <link href="~/Content/bootstrap.css" rel="stylesheet" /> 
+    <!-- Custom Theme files -->
+    <link href='//fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link href="/Content/style.css" rel='stylesheet' type='text/css' />
+    <script src="/Scripts/jquery-1.11.1.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <div class="container">
+                <div class="logo">
+                    <a href="/"><h1>VDinev</h1></a>
+                </div>
+                <div class="social">
+                    <ul>
+                        <li><a href="#" class="facebook"> </a></li>
+                        <li><a href="#" class="facebook twitter"> </a></li>
+                        <li><a href="#" class="facebook chrome"> </a></li>
+                        <li><a href="#" class="facebook in"> </a></li>
+                        <li><a href="#" class="facebook beh"> </a></li>
+                        <li><a href="#" class="facebook vem"> </a></li>
+                        <li><a href="#" class="facebook yout"> </a></li>
+                    </ul>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+
+        <!--head-bottom-->
+        <div class="head-bottom">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class=""><a href="/">Home</a></li>
+                        <li class=""><a href="/home/about">About</a></li>
+                        @foreach (var item in Model.BlogCategoy)
+                        {
+                            <li class=""><a href="/blogs/index/@item.Id">@item.Category</a></li>
+                        }
+                    </ul>
+                </div><!--/.nav-collapse -->
+            </div>
+            </nav>
+        </div>
+        <!--head-bottom-->
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+    </div>
+    <!-- footer -->
+
+    <!-- footer -->
+    
+    <div class="copyright">
+        <div class="container">
+            <p>© @DateTime.Now.Year VDinev. All rights reserved</p>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

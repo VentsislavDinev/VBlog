@@ -1,0 +1,50 @@
+﻿@model VBlog.Data.ViewModels.HomePageViewModel
+
+@Html.Action("TopSiteBar", Model)
+<!-- technology -->
+<div class="technology">
+    <div class="container">
+        <div class="col-md-9 technology-left">
+            <div class="tech-no">
+
+                @foreach (var item in Model.GetBlogPost)
+                {
+                    <div class="col-md-12">
+                        <div class="soci">
+                            <ul>
+                                <li><a href="#" class="facebook-1"> </a></li>
+                                <li><a href="#" class="facebook-1 twitter"> </a></li>
+                                <li><a href="#" class="facebook-1 chrome"> </a></li>
+                                <li><a href="#"><i class="glyphicon glyphicon-envelope"> </i></a></li>
+                                <li><a href="#"><i class="glyphicon glyphicon-print"> </i></a></li>
+                                <li><a href="#"><i class="glyphicon glyphicon-plus"> </i></a></li>
+                            </ul>
+                        </div>
+                        <div class="tc-ch">
+
+                            <div class="tch-img">
+                                <a href="/Blogs/getsingle/@item.Title"><img src="/Files/uploads/@item.Avatar" class="img-responsive" alt="" /></a>
+                            </div>
+                            <a class="blog blue" href="/Blogs/Index/@item.Id">Technology</a>
+                            <h3><a href="/Blogs/getsingle/@item.Title">@item.Title</a></h3>
+
+                            @item.ShortContent
+
+                            <div class="blog-poast-info">
+                                <ul>
+                                    <li><i class="glyphicon glyphicon-user"> </i> @item.UserId </li>
+                                    <li><i class="glyphicon glyphicon-calendar"> </i>@item.CreatedOn</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                }
+            </div>
+        </div>
+        <!-- technology-right -->
+        @Html.Action("RightSiteBar")
+        <div class="clearfix"></div>
+        <!-- technology-right -->
+    </div>
+</div>

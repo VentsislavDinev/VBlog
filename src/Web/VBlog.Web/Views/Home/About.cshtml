@@ -1,0 +1,32 @@
+﻿@{
+    ViewBag.Title = "About";
+}
+<div class="technology-1">
+    <div class="container">
+        <div class="col-md-9 technology-left">
+            <div class="business">
+
+                @foreach (var item in Model.About)
+                {
+                    <div class="design-top">
+                        <h4> @Html.DisplayFor(modelItem => item.Title)</h4>
+
+                        <div class="design-left">
+
+                            <p> @Html.Raw(item.Description)</p>
+
+                        </div>
+                    </div>
+
+                }
+
+
+
+
+                <div class="clearfix"></div>
+            </div>
+            <div class="clearfix"></div>
+            <!-- technology-right -->
+        </div>
+    </div>
+</div>
