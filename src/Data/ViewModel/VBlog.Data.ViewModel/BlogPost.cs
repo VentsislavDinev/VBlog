@@ -2,6 +2,7 @@
 {
     using System;
     using System.ComponentModel.DataAnnotations;
+    using System.Web;
     using System.Web.Mvc;
 
     public class ForumPostViewModel
@@ -15,6 +16,8 @@
         public string UserId { get; set; }
         public DateTime CreationTime { get; set; }
         public string Image { get; set; }
+
+        public HttpPostedFileBase Upload { get; set; }
         public int CategoryId { get; set; }
     }
 }

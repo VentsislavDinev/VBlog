@@ -355,22 +355,25 @@
   <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
-    <Compile Include="App_Start\IdentityConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\VBlogNavigationProvider.cs" />
     <Compile Include="App_Start\VBlogWebModule.cs" />
+    <Compile Include="Controllers\AboutController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\BlogCategoryController.cs" />
+    <Compile Include="Controllers\BlogController.cs" />
+    <Compile Include="Controllers\ForMeController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\Results\ChallengeResult.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\AccountViewModels.cs" />
-    <Compile Include="Models\IdentityModels.cs" />
-    <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Views\UrlChecker.cs" />
+    <Compile Include="Views\VBlogWebViewPageBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Abp\Framework\scripts\abp.js" />
@@ -450,6 +453,22 @@
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
+    <Content Include="Views\About\Create.cshtml" />
+    <Content Include="Views\About\Index.cshtml" />
+    <Content Include="Views\About\Update.cshtml" />
+    <Content Include="Views\About\Delete.cshtml" />
+    <Content Include="Views\BlogCategory\Index.cshtml" />
+    <Content Include="Views\BlogCategory\Create.cshtml" />
+    <Content Include="Views\BlogCategory\Update.cshtml" />
+    <Content Include="Views\BlogCategory\Delete.cshtml" />
+    <Content Include="Views\Blog\Index.cshtml" />
+    <Content Include="Views\Blog\Create.cshtml" />
+    <Content Include="Views\Blog\Update.cshtml" />
+    <Content Include="Views\Blog\Delete.cshtml" />
+    <Content Include="Views\ForMe\Index.cshtml" />
+    <Content Include="Views\ForMe\Create.cshtml" />
+    <Content Include="Views\ForMe\Update.cshtml" />
+    <Content Include="Views\ForMe\Delete.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -479,6 +498,10 @@
     <ProjectReference Include="..\..\Data\VBlog.Data.EntityFramework\VBlog.Data.EntityFramework.csproj">
       <Project>{8F72D214-46D2-4D5F-B0E0-BBF6DD0F509E}</Project>
       <Name>VBlog.Data.EntityFramework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Data\ViewModel\VBlog.Data.ViewModel\VBlog.Data.ViewModel.csproj">
+      <Project>{D5BF96B7-7E91-40CE-A376-E99E4172AE0D}</Project>
+      <Name>VBlog.Data.ViewModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Infrastructure\VBlog.Infrastructure.Core\VBlog.Infrastructure.Core.csproj">
       <Project>{14C89184-017F-4C58-8946-9A10B784D173}</Project>

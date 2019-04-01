@@ -1,431 +1,39 @@
-﻿using System;
-using System.Globalization;
+﻿using Abp.Authorization;
+using Abp.Authorization.Users;
+using Abp.AutoMapper;
+using Abp.Configuration.Startup;
+using Abp.Domain.Uow;
+using Abp.Extensions;
+using Abp.Threading;
+using Abp.UI;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
+using Microsoft.Owin.Security;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin.Security;
-using VBlog.Web.Administration.Models;
+using VBlog.Data.ViewModel.Account;
+using VBlog.Infrastructure.Core.Authorization;
+using VBlog.Infrastructure.Core.Authorization.Roles;
+using VBlog.Infrastructure.Core.MultiTenancy;
+using VBlog.Infrastructure.Core.Users;
+using VBlog.Web.Administration.Controllers.Results;
 
 namespace VBlog.Web.Administration.Controllers
 {
-    [Authorize]
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
-        private ApplicationSignInManager _signInManager;
-        private ApplicationUserManager _userManager;
-
-        public AccountController()
-        {
-        }
-
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
-        {
-            UserManager = userManager;
-            SignInManager = signInManager;
-        }
-
-        public ApplicationSignInManager SignInManager
-        {
-            get
-            {
-                return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
-            }
-            private set 
-            { 
-                _signInManager = value; 
-            }
-        }
-
-        public ApplicationUserManager UserManager
-        {
-            get
-            {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
-        }
-
-        //
-        // GET: /Account/Login
-        [AllowAnonymous]
-        public ActionResult Login(string returnUrl)
-        {
-            ViewBag.ReturnUrl = returnUrl;
-            return View();
-        }
-
-        //
-        // POST: /Account/Login
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            // This doesn't count login failures towards account lockout
-            // To enable password failures to trigger account lockout, change to shouldLockout: true
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
-            switch (result)
-            {
-                case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
-                case SignInStatus.LockedOut:
-                    return View("Lockout");
-                case SignInStatus.RequiresVerification:
-                    return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = model.RememberMe });
-                case SignInStatus.Failure:
-                default:
-                    ModelState.AddModelError("", "Invalid login attempt.");
-                    return View(model);
-            }
-        }
-
-        //
-        // GET: /Account/VerifyCode
-        [AllowAnonymous]
-        public async Task<ActionResult> VerifyCode(string provider, string returnUrl, bool rememberMe)
-        {
-            // Require that the user has already logged in via username/password or external login
-            if (!await SignInManager.HasBeenVerifiedAsync())
-            {
-                return View("Error");
-            }
-            return View(new VerifyCodeViewModel { Provider = provider, ReturnUrl = returnUrl, RememberMe = rememberMe });
-        }
-
-        //
-        // POST: /Account/VerifyCode
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> VerifyCode(VerifyCodeViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            // The following code protects for brute force attacks against the two factor codes. 
-            // If a user enters incorrect codes for a specified amount of time then the user account 
-            // will be locked out for a specified amount of time. 
-            // You can configure the account lockout settings in IdentityConfig
-            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent:  model.RememberMe, rememberBrowser: model.RememberBrowser);
-            switch (result)
-            {
-                case SignInStatus.Success:
-                    return RedirectToLocal(model.ReturnUrl);
-                case SignInStatus.LockedOut:
-                    return View("Lockout");
-                case SignInStatus.Failure:
-                default:
-                    ModelState.AddModelError("", "Invalid code.");
-                    return View(model);
-            }
-        }
-
-        //
-        // GET: /Account/Register
-        [AllowAnonymous]
-        public ActionResult Register()
-        {
-            return View();
-        }
-
-        //
-        // POST: /Account/Register
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Register(RegisterViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-                var result = await UserManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
-                    
-                    // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
-                    // Send an email with this link
-                    // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
-
-                    return RedirectToAction("Index", "Home");
-                }
-                AddErrors(result);
-            }
-
-            // If we got this far, something failed, redisplay form
-            return View(model);
-        }
-
-        //
-        // GET: /Account/ConfirmEmail
-        [AllowAnonymous]
-        public async Task<ActionResult> ConfirmEmail(string userId, string code)
-        {
-            if (userId == null || code == null)
-            {
-                return View("Error");
-            }
-            var result = await UserManager.ConfirmEmailAsync(userId, code);
-            return View(result.Succeeded ? "ConfirmEmail" : "Error");
-        }
-
-        //
-        // GET: /Account/ForgotPassword
-        [AllowAnonymous]
-        public ActionResult ForgotPassword()
-        {
-            return View();
-        }
-
-        //
-        // POST: /Account/ForgotPassword
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> ForgotPassword(ForgotPasswordViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var user = await UserManager.FindByNameAsync(model.Email);
-                if (user == null || !(await UserManager.IsEmailConfirmedAsync(user.Id)))
-                {
-                    // Don't reveal that the user does not exist or is not confirmed
-                    return View("ForgotPasswordConfirmation");
-                }
-
-                // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
-                // Send an email with this link
-                // string code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
-                // var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);		
-                // await UserManager.SendEmailAsync(user.Id, "Reset Password", "Please reset your password by clicking <a href=\"" + callbackUrl + "\">here</a>");
-                // return RedirectToAction("ForgotPasswordConfirmation", "Account");
-            }
-
-            // If we got this far, something failed, redisplay form
-            return View(model);
-        }
-
-        //
-        // GET: /Account/ForgotPasswordConfirmation
-        [AllowAnonymous]
-        public ActionResult ForgotPasswordConfirmation()
-        {
-            return View();
-        }
-
-        //
-        // GET: /Account/ResetPassword
-        [AllowAnonymous]
-        public ActionResult ResetPassword(string code)
-        {
-            return code == null ? View("Error") : View();
-        }
-
-        //
-        // POST: /Account/ResetPassword
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> ResetPassword(ResetPasswordViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-            var user = await UserManager.FindByNameAsync(model.Email);
-            if (user == null)
-            {
-                // Don't reveal that the user does not exist
-                return RedirectToAction("ResetPasswordConfirmation", "Account");
-            }
-            var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.Password);
-            if (result.Succeeded)
-            {
-                return RedirectToAction("ResetPasswordConfirmation", "Account");
-            }
-            AddErrors(result);
-            return View();
-        }
-
-        //
-        // GET: /Account/ResetPasswordConfirmation
-        [AllowAnonymous]
-        public ActionResult ResetPasswordConfirmation()
-        {
-            return View();
-        }
-
-        //
-        // POST: /Account/ExternalLogin
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public ActionResult ExternalLogin(string provider, string returnUrl)
-        {
-            // Request a redirect to the external login provider
-            return new ChallengeResult(provider, Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl }));
-        }
-
-        //
-        // GET: /Account/SendCode
-        [AllowAnonymous]
-        public async Task<ActionResult> SendCode(string returnUrl, bool rememberMe)
-        {
-            var userId = await SignInManager.GetVerifiedUserIdAsync();
-            if (userId == null)
-            {
-                return View("Error");
-            }
-            var userFactors = await UserManager.GetValidTwoFactorProvidersAsync(userId);
-            var factorOptions = userFactors.Select(purpose => new SelectListItem { Text = purpose, Value = purpose }).ToList();
-            return View(new SendCodeViewModel { Providers = factorOptions, ReturnUrl = returnUrl, RememberMe = rememberMe });
-        }
-
-        //
-        // POST: /Account/SendCode
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> SendCode(SendCodeViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View();
-            }
-
-            // Generate the token and send it
-            if (!await SignInManager.SendTwoFactorCodeAsync(model.SelectedProvider))
-            {
-                return View("Error");
-            }
-            return RedirectToAction("VerifyCode", new { Provider = model.SelectedProvider, ReturnUrl = model.ReturnUrl, RememberMe = model.RememberMe });
-        }
-
-        //
-        // GET: /Account/ExternalLoginCallback
-        [AllowAnonymous]
-        public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
-        {
-            var loginInfo = await AuthenticationManager.GetExternalLoginInfoAsync();
-            if (loginInfo == null)
-            {
-                return RedirectToAction("Login");
-            }
-
-            // Sign in the user with this external login provider if the user already has a login
-            var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
-            switch (result)
-            {
-                case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
-                case SignInStatus.LockedOut:
-                    return View("Lockout");
-                case SignInStatus.RequiresVerification:
-                    return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
-                case SignInStatus.Failure:
-                default:
-                    // If the user does not have an account, then prompt the user to create an account
-                    ViewBag.ReturnUrl = returnUrl;
-                    ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
-                    return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
-            }
-        }
-
-        //
-        // POST: /Account/ExternalLoginConfirmation
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> ExternalLoginConfirmation(ExternalLoginConfirmationViewModel model, string returnUrl)
-        {
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Manage");
-            }
-
-            if (ModelState.IsValid)
-            {
-                // Get the information about the user from the external login provider
-                var info = await AuthenticationManager.GetExternalLoginInfoAsync();
-                if (info == null)
-                {
-                    return View("ExternalLoginFailure");
-                }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-                var result = await UserManager.CreateAsync(user);
-                if (result.Succeeded)
-                {
-                    result = await UserManager.AddLoginAsync(user.Id, info.Login);
-                    if (result.Succeeded)
-                    {
-                        await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
-                        return RedirectToLocal(returnUrl);
-                    }
-                }
-                AddErrors(result);
-            }
-
-            ViewBag.ReturnUrl = returnUrl;
-            return View(model);
-        }
-
-        //
-        // POST: /Account/LogOff
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult LogOff()
-        {
-            AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
-            return RedirectToAction("Index", "Home");
-        }
-
-        //
-        // GET: /Account/ExternalLoginFailure
-        [AllowAnonymous]
-        public ActionResult ExternalLoginFailure()
-        {
-            return View();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                if (_userManager != null)
-                {
-                    _userManager.Dispose();
-                    _userManager = null;
-                }
-
-                if (_signInManager != null)
-                {
-                    _signInManager.Dispose();
-                    _signInManager = null;
-                }
-            }
-
-            base.Dispose(disposing);
-        }
-
-        #region Helpers
-        // Used for XSRF protection when adding external logins
-        private const string XsrfKey = "XsrfId";
+        private readonly TenantManager _tenantManager;
+        private readonly UserManager _userManager;
+        private readonly RoleManager _roleManager;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IMultiTenancyConfig _multiTenancyConfig;
+        private readonly LoginManager _logInManager;
 
         private IAuthenticationManager AuthenticationManager
         {
@@ -435,51 +43,439 @@ namespace VBlog.Web.Administration.Controllers
             }
         }
 
-        private void AddErrors(IdentityResult result)
+        public AccountController(
+            TenantManager tenantManager,
+            UserManager userManager,
+            RoleManager roleManager,
+            IUnitOfWorkManager unitOfWorkManager,
+            IMultiTenancyConfig multiTenancyConfig,
+            LoginManager logInManager)
         {
-            foreach (var error in result.Errors)
+            _tenantManager = tenantManager;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _unitOfWorkManager = unitOfWorkManager;
+            _multiTenancyConfig = multiTenancyConfig;
+            _logInManager = logInManager;
+        }
+
+        #region Login / Logout
+
+        public ActionResult Login(string returnUrl = "")
+        {
+            if (string.IsNullOrWhiteSpace(returnUrl))
             {
-                ModelState.AddModelError("", error);
+                returnUrl = Request.ApplicationPath;
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> Login(LoginViewModel loginModel, string returnUrl = "", string returnUrlHash = "")
+        {
+            CheckModelState();
+
+            var loginResult = await GetLoginResultAsync(
+                loginModel.UsernameOrEmailAddress,
+                loginModel.Password,
+                loginModel.TenancyName
+                );
+
+            await SignInAsync(loginResult.User, loginResult.Identity, loginModel.RememberMe);
+
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                returnUrl = Request.ApplicationPath;
+            }
+
+            if (!string.IsNullOrWhiteSpace(returnUrlHash))
+            {
+                returnUrl = returnUrl + returnUrlHash;
+            }
+
+            return Redirect("/");
+        }
+
+        private async Task<AbpLoginResult<Tenant, User>> GetLoginResultAsync(string usernameOrEmailAddress, string password, string tenancyName)
+        {
+            var loginResult = await _logInManager.LoginAsync(usernameOrEmailAddress, password, tenancyName);
+
+            switch (loginResult.Result)
+            {
+                case AbpLoginResultType.Success:
+                    return loginResult;
+                default:
+                    throw CreateExceptionForFailedLoginAttempt(loginResult.Result, usernameOrEmailAddress, tenancyName);
             }
         }
 
-        private ActionResult RedirectToLocal(string returnUrl)
+        private async Task SignInAsync(User user, ClaimsIdentity identity = null, bool rememberMe = false)
         {
-            if (Url.IsLocalUrl(returnUrl))
+            if (identity == null)
             {
-                return Redirect(returnUrl);
+                identity = await _userManager.CreateIdentityAsync(user, DefaultAuthenticationTypes.ApplicationCookie);
             }
-            return RedirectToAction("Index", "Home");
+
+            AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
+            AuthenticationManager.SignIn(new AuthenticationProperties { IsPersistent = rememberMe }, identity);
         }
 
-        internal class ChallengeResult : HttpUnauthorizedResult
+        private Exception CreateExceptionForFailedLoginAttempt(AbpLoginResultType result, string usernameOrEmailAddress, string tenancyName)
         {
-            public ChallengeResult(string provider, string redirectUri)
-                : this(provider, redirectUri, null)
+            switch (result)
             {
+                case AbpLoginResultType.Success:
+                    return new ApplicationException("Don't call this method with a success result!");
+                case AbpLoginResultType.InvalidUserNameOrEmailAddress:
+                case AbpLoginResultType.InvalidPassword:
+                    return new UserFriendlyException(L("LoginFailed"), L("InvalidUserNameOrPassword"));
+                case AbpLoginResultType.InvalidTenancyName:
+                    return new UserFriendlyException(L("LoginFailed"), L("ThereIsNoTenantDefinedWithName{0}", tenancyName));
+                case AbpLoginResultType.TenantIsNotActive:
+                    return new UserFriendlyException(L("LoginFailed"), L("TenantIsNotActive", tenancyName));
+                case AbpLoginResultType.UserIsNotActive:
+                    return new UserFriendlyException(L("LoginFailed"), L("UserIsNotActiveAndCanNotLogin", usernameOrEmailAddress));
+                case AbpLoginResultType.UserEmailIsNotConfirmed:
+                    return new UserFriendlyException(L("LoginFailed"), "Your email address is not confirmed. You can not login"); //TODO: localize message
+                default: //Can not fall to default actually. But other result types can be added in the future and we may forget to handle it
+                    Logger.Warn("Unhandled login fail reason: " + result);
+                    return new UserFriendlyException(L("LoginFailed"));
             }
+        }
 
-            public ChallengeResult(string provider, string redirectUri, string userId)
+        public ActionResult Logout()
+        {
+            AuthenticationManager.SignOut();
+            return RedirectToAction("Login");
+        }
+
+        #endregion
+
+        #region Register
+
+        public ActionResult Register()
+        {
+            return RegisterView(new RegisterViewModel());
+        }
+
+        private ActionResult RegisterView(RegisterViewModel model)
+        {
+            ViewBag.IsMultiTenancyEnabled = _multiTenancyConfig.IsEnabled;
+
+            return View("Register", model);
+        }
+
+        [HttpPost]
+        [UnitOfWork]
+        public virtual async Task<ActionResult> Register(RegisterViewModel model)
+        {
+            try
             {
-                LoginProvider = provider;
-                RedirectUri = redirectUri;
-                UserId = userId;
-            }
+                CheckModelState();
 
-            public string LoginProvider { get; set; }
-            public string RedirectUri { get; set; }
-            public string UserId { get; set; }
-
-            public override void ExecuteResult(ControllerContext context)
-            {
-                var properties = new AuthenticationProperties { RedirectUri = RedirectUri };
-                if (UserId != null)
+                //Get tenancy name and tenant
+                if (!_multiTenancyConfig.IsEnabled)
                 {
-                    properties.Dictionary[XsrfKey] = UserId;
+                    model.TenancyName = Tenant.DefaultTenantName;
                 }
-                context.HttpContext.GetOwinContext().Authentication.Challenge(properties, LoginProvider);
+                else if (model.TenancyName.IsNullOrEmpty())
+                {
+                    throw new UserFriendlyException(L("TenantNameCanNotBeEmpty"));
+                }
+
+                var tenant = await GetActiveTenantAsync(model.TenancyName);
+
+                //Create user
+                var user = new User
+                {
+                    TenantId = tenant.Id,
+                    Name = model.Name,
+                    Surname = model.Surname,
+                    EmailAddress = model.EmailAddress,
+                    IsActive = true
+                };
+
+                //Get external login info if possible
+                ExternalLoginInfo externalLoginInfo = null;
+                if (model.IsExternalLogin)
+                {
+                    externalLoginInfo = await AuthenticationManager.GetExternalLoginInfoAsync();
+                    if (externalLoginInfo == null)
+                    {
+                        throw new ApplicationException("Can not external login!");
+                    }
+
+                    user.Logins = new List<UserLogin>
+                    {
+                        new UserLogin
+                        {
+                            TenantId = tenant.Id,
+                            LoginProvider = externalLoginInfo.Login.LoginProvider,
+                            ProviderKey = externalLoginInfo.Login.ProviderKey
+                        }
+                    };
+
+                    if (model.UserName.IsNullOrEmpty())
+                    {
+                        model.UserName = model.EmailAddress;
+                    }
+
+                    model.Password = VBlog.Infrastructure.Core.Users.User.CreateRandomPassword();
+
+                    if (string.Equals(externalLoginInfo.Email, model.EmailAddress, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        user.IsEmailConfirmed = true;
+                    }
+                }
+                else
+                {
+                    //Username and Password are required if not external login
+                    if (model.UserName.IsNullOrEmpty() || model.Password.IsNullOrEmpty())
+                    {
+                        throw new UserFriendlyException(L("FormIsNotValidMessage"));
+                    }
+                }
+
+                user.UserName = model.UserName;
+                user.Password = new PasswordHasher().HashPassword(model.Password);
+
+                //Switch to the tenant
+                _unitOfWorkManager.Current.EnableFilter(AbpDataFilters.MayHaveTenant); //TODO: Needed?
+                _unitOfWorkManager.Current.SetTenantId(tenant.Id);
+
+                //Add default roles
+                user.Roles = new List<UserRole>();
+                foreach (var defaultRole in await _roleManager.Roles.Where(r => r.IsDefault).ToListAsync())
+                {
+                    user.Roles.Add(new UserRole { RoleId = defaultRole.Id });
+                }
+
+                //Save user
+                CheckErrors(await _userManager.CreateAsync(user));
+                await _unitOfWorkManager.Current.SaveChangesAsync();
+
+                //Directly login if possible
+                if (user.IsActive)
+                {
+                    AbpLoginResult<Tenant, User> loginResult;
+                    if (externalLoginInfo != null)
+                    {
+                        loginResult = await _logInManager.LoginAsync(externalLoginInfo.Login, tenant.TenancyName);
+                    }
+                    else
+                    {
+                        loginResult = await GetLoginResultAsync(user.UserName, model.Password, tenant.TenancyName);
+                    }
+
+                    if (loginResult.Result == AbpLoginResultType.Success)
+                    {
+                        await SignInAsync(loginResult.User, loginResult.Identity);
+                        return Redirect(Url.Action("Index", "Home"));
+                    }
+
+                    Logger.Warn("New registered user could not be login. This should not be normally. login result: " + loginResult.Result);
+                }
+
+                //If can not login, show a register result page
+                return View("RegisterResult", new RegisterResultViewModel
+                {
+                    TenancyName = tenant.TenancyName,
+                    NameAndSurname = user.Name + " " + user.Surname,
+                    UserName = user.UserName,
+                    EmailAddress = user.EmailAddress,
+                    IsActive = user.IsActive
+                });
+            }
+            catch (UserFriendlyException ex)
+            {
+                ViewBag.IsMultiTenancyEnabled = _multiTenancyConfig.IsEnabled;
+                ViewBag.ErrorMessage = ex.Message;
+
+                return View("Register", model);
             }
         }
+
+        #endregion
+
+        #region External Login
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ExternalLogin(string provider, string returnUrl)
+        {
+            return new ChallengeResult(
+                provider,
+                Url.Action(
+                    "ExternalLoginCallback",
+                    "Account",
+                    new
+                    {
+                        ReturnUrl = returnUrl
+                    })
+                );
+        }
+
+        [UnitOfWork]
+        public virtual async Task<ActionResult> ExternalLoginCallback(string returnUrl, string tenancyName = "")
+        {
+            var loginInfo = await AuthenticationManager.GetExternalLoginInfoAsync();
+            if (loginInfo == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            //Try to find tenancy name
+            if (tenancyName.IsNullOrEmpty())
+            {
+                var tenants = await FindPossibleTenantsOfUserAsync(loginInfo.Login);
+                switch (tenants.Count)
+                {
+                    case 0:
+                        return await RegisterView(loginInfo);
+                    case 1:
+                        tenancyName = tenants[0].TenancyName;
+                        break;
+                    default:
+                        return View("TenantSelection", new TenantSelectionViewModel
+                        {
+                            Action = Url.Action("ExternalLoginCallback", "Account", new { returnUrl }),
+                            Tenants = tenants.MapTo<List<TenantSelectionViewModel.TenantInfo>>()
+                        });
+                }
+            }
+
+            var loginResult = await _logInManager.LoginAsync(loginInfo.Login, tenancyName);
+
+            switch (loginResult.Result)
+            {
+                case AbpLoginResultType.Success:
+                    await SignInAsync(loginResult.User, loginResult.Identity, false);
+
+                    if (string.IsNullOrWhiteSpace(returnUrl))
+                    {
+                        returnUrl = Url.Action("Index", "Home");
+                    }
+
+                    return Redirect(returnUrl);
+                case AbpLoginResultType.UnknownExternalLogin:
+                    return await RegisterView(loginInfo, tenancyName);
+                default:
+                    throw CreateExceptionForFailedLoginAttempt(loginResult.Result, loginInfo.Email ?? loginInfo.DefaultUserName, tenancyName);
+            }
+        }
+
+        private async Task<ActionResult> RegisterView(ExternalLoginInfo loginInfo, string tenancyName = null)
+        {
+            var name = loginInfo.DefaultUserName;
+            var surname = loginInfo.DefaultUserName;
+
+            var extractedNameAndSurname = TryExtractNameAndSurnameFromClaims(loginInfo.ExternalIdentity.Claims.ToList(), ref name, ref surname);
+
+            var viewModel = new RegisterViewModel
+            {
+                TenancyName = tenancyName,
+                EmailAddress = loginInfo.Email,
+                Name = name,
+                Surname = surname,
+                IsExternalLogin = true
+            };
+
+            if (!tenancyName.IsNullOrEmpty() && extractedNameAndSurname)
+            {
+                return await Register(viewModel);
+            }
+
+            return RegisterView(viewModel);
+        }
+
+        [UnitOfWork]
+        protected virtual async Task<List<Tenant>> FindPossibleTenantsOfUserAsync(UserLoginInfo login)
+        {
+            List<User> allUsers;
+            using (_unitOfWorkManager.Current.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                allUsers = await _userManager.FindAllAsync(login);
+            }
+
+            return allUsers
+                .Where(u => u.TenantId != null)
+                .Select(u => AsyncHelper.RunSync(() => _tenantManager.FindByIdAsync(u.TenantId.Value)))
+                .ToList();
+        }
+
+        private static bool TryExtractNameAndSurnameFromClaims(List<Claim> claims, ref string name, ref string surname)
+        {
+            string foundName = null;
+            string foundSurname = null;
+
+            var givennameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName);
+            if (givennameClaim != null && !givennameClaim.Value.IsNullOrEmpty())
+            {
+                foundName = givennameClaim.Value;
+            }
+
+            var surnameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname);
+            if (surnameClaim != null && !surnameClaim.Value.IsNullOrEmpty())
+            {
+                foundSurname = surnameClaim.Value;
+            }
+
+            if (foundName == null || foundSurname == null)
+            {
+                var nameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+                if (nameClaim != null)
+                {
+                    var nameSurName = nameClaim.Value;
+                    if (!nameSurName.IsNullOrEmpty())
+                    {
+                        var lastSpaceIndex = nameSurName.LastIndexOf(' ');
+                        if (lastSpaceIndex < 1 || lastSpaceIndex > (nameSurName.Length - 2))
+                        {
+                            foundName = foundSurname = nameSurName;
+                        }
+                        else
+                        {
+                            foundName = nameSurName.Substring(0, lastSpaceIndex);
+                            foundSurname = nameSurName.Substring(lastSpaceIndex);
+                        }
+                    }
+                }
+            }
+
+            if (!foundName.IsNullOrEmpty())
+            {
+                name = foundName;
+            }
+
+            if (!foundSurname.IsNullOrEmpty())
+            {
+                surname = foundSurname;
+            }
+
+            return foundName != null && foundSurname != null;
+        }
+
+        #endregion
+
+        #region Common private methods
+
+        private async Task<Tenant> GetActiveTenantAsync(string tenancyName)
+        {
+            var tenant = await _tenantManager.FindByTenancyNameAsync(tenancyName);
+            if (tenant == null)
+            {
+                throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", tenancyName));
+            }
+
+            if (!tenant.IsActive)
+            {
+                throw new UserFriendlyException(L("TenantIsNotActive", tenancyName));
+            }
+
+            return tenant;
+        }
+
         #endregion
     }
 }
