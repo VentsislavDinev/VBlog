@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VBlog.Web", "Web\VBlog.Web\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VBlog.Web.Administration", "Web\VBlog.Web.Administration\VBlog.Web.Administration.csproj", "{16000EA1-B8BD-47EA-8C98-0014F84D5FDB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VBlog.Web.WebApi.Server", "Web\VBlog.Web.WebApi.Server\VBlog.Web.WebApi.Server.csproj", "{0A00A9E3-7EF1-41DB-AC94-B04042AF4AC6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,10 @@ Global
 		{16000EA1-B8BD-47EA-8C98-0014F84D5FDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16000EA1-B8BD-47EA-8C98-0014F84D5FDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16000EA1-B8BD-47EA-8C98-0014F84D5FDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A00A9E3-7EF1-41DB-AC94-B04042AF4AC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A00A9E3-7EF1-41DB-AC94-B04042AF4AC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A00A9E3-7EF1-41DB-AC94-B04042AF4AC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A00A9E3-7EF1-41DB-AC94-B04042AF4AC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -115,6 +121,7 @@ Global
 		{99170603-19F7-464C-89DC-CC069C2D2880} = {06CED6B8-3B28-47F1-BDC0-DC998F78E987}
 		{DF9BF10E-7406-4141-A181-F34750AE0E5C} = {06CED6B8-3B28-47F1-BDC0-DC998F78E987}
 		{16000EA1-B8BD-47EA-8C98-0014F84D5FDB} = {06CED6B8-3B28-47F1-BDC0-DC998F78E987}
+		{0A00A9E3-7EF1-41DB-AC94-B04042AF4AC6} = {06CED6B8-3B28-47F1-BDC0-DC998F78E987}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1FE6E995-1CC0-4A99-9028-E7210B4DDAFF}
