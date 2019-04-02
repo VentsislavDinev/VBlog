@@ -495,6 +495,10 @@
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Data\VBlog.Data.Dapper\VBlog.Data.Dapper.csproj">
+      <Project>{8A8AA6DB-8733-4230-A55F-F75CB0F6DDF5}</Project>
+      <Name>VBlog.Data.Dapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Data\VBlog.Data.EntityFramework\VBlog.Data.EntityFramework.csproj">
       <Project>{8F72D214-46D2-4D5F-B0E0-BBF6DD0F509E}</Project>
       <Name>VBlog.Data.EntityFramework</Name>

@@ -21,10 +21,6 @@ namespace VEducationWebApi
         {
             IocManager.RegisterAssemblyByConvention(Assembly.GetExecutingAssembly());
 
-            Configuration.Modules.AbpWebApi().DynamicApiControllerBuilder
-                .ForAll<IApplicationService>(typeof(VBlogServiceCoreModule).Assembly, "app")
-                .Build();
-
             Configuration.Modules.AbpWebApi().HttpConfiguration.Filters.Add(new HostAuthenticationFilter("Bearer"));
         }
     }

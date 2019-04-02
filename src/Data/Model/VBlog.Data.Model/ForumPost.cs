@@ -5,7 +5,7 @@
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     
-    public class ForumPost : Entity
+    public class ForumPost : Entity, IEntity<int>
     {
         private ICollection<ForumPostCategory> forumPostCategory;
         private ICollection<ForumPostAnswer> forumPostAnswer;

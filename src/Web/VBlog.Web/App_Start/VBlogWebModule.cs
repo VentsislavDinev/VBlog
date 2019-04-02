@@ -12,7 +12,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
-
+using VBlog.Data.Dapper;
 using VBlog.Data.EntityFramework;
 using VBlog.Infrastructure.Core;
 using VBlog.Service;
@@ -27,6 +27,7 @@ namespace VBlog.Web.App_Start
         typeof(VBlogServiceCoreModule),
         typeof(VBlogCoreModule),
         typeof(BlogServiceModule),
+        typeof(DapperModule),
         typeof(WebCommonModule),
         typeof(VBlogWebApiModule),
         typeof(AbpWebMvcModule),

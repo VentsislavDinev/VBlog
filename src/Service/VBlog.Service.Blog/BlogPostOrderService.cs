@@ -1,4 +1,5 @@
 ﻿using Abp.Application.Services;
+using Abp.Dapper.Repositories;
 using Abp.Domain.Repositories;
 using System;
 using System.Collections.Generic;
@@ -14,9 +15,12 @@ namespace VBlog.Service.Blog
     {
         private IRepository<ForumPost> _forumPost;
 
-        public BlogPostOrderService(IRepository<ForumPost> forumPost)
+        private readonly IDapperRepository<ForumPost> _forumPostOrder;
+
+        public BlogPostOrderService(IRepository<ForumPost> forumPost, IDapperRepository<ForumPost> forumPostOrder)
         {
             _forumPost = forumPost ?? throw new ArgumentNullException(nameof(forumPost));
+            _forumPostOrder = forumPostOrder ?? throw new ArgumentNullException(nameof(forumPostOrder));
         }
 
         public async Task<ForumPostViewModel> GetSinglePost(int id)
@@ -29,6 +33,11 @@ namespace VBlog.Service.Blog
                 Image = x.Image,
                 UserId = x.UserId,
             }).SingleOrDefaultAsync();
+        }
+
+        public async Task GetAllWithDapper()
+        {
+            await _forumPostOrder.GetAllAsync();
         }
 
         public async Task<List<ForumPostViewModel>> GetAllByCategory(int id)
